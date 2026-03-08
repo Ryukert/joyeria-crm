@@ -1,7 +1,7 @@
 import admin from "firebase-admin";
 import crypto from "crypto";
 
-function initFirebase() {
+function getDb() {
   if (!admin.apps.length) {
     const privateKey = process.env.FIREBASE_PRIVATE_KEY
       ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
@@ -37,8 +37,7 @@ function initFirebase() {
 }
 
 function sendJson(res, status, data) {
-  res.status(status);
-  res.setHeader("Content-Type", "application/json");
+  res.status(status).setHeader("Content-Type", "application/json");
   res.end(JSON.stringify(data));
 }
 
@@ -52,23 +51,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const db = initFirebase();
+    const db = getDb();
     const ref = db.ref("clientes_joyeria");
 
     if (req.method === "GET") {
       const snapshot = await ref.get();
       const raw = snapshot.val() || {};
 
-      const clientes = Object.keys(raw).map((id) => ({
+      const data = Object.entries(raw).map(([id, value]) => ({
         id,
-        ...raw[id],
+        ...value,
       }));
 
-      clientes.sort((a, b) =>
-        String(b.fecha || "").localeCompare(String(a.fecha || ""))
-      );
-
-      return sendJson(res, 200, clientes);
+      data.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
+      return sendJson(res, 200, data);
     }
 
     if (req.method === "POST") {
@@ -135,7 +131,6 @@ export default async function handler(req, res) {
       }
 
       await ref.child(id).remove();
-
       return sendJson(res, 200, { ok: true });
     }
 
