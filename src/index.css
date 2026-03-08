@@ -32,15 +32,11 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* =========================
-   FONDO GENERAL CON LOGO
-========================= */
-
 .app-shell {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
-  background: #0a0a0a;
+  background: #050505;
 }
 
 .background-overlay {
@@ -49,9 +45,9 @@ button:disabled {
   z-index: 0;
   background-image: url("/logo_eduardos.png");
   background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 72%;
-  opacity: 0.22;
+  background-position: 64% center;
+  background-size: 78%;
+  opacity: 0.26;
   pointer-events: none;
 }
 
@@ -62,22 +58,43 @@ button:disabled {
   background:
     linear-gradient(
       90deg,
-      rgba(10, 10, 10, 0.82) 0%,
-      rgba(10, 10, 10, 0.58) 22%,
-      rgba(10, 10, 10, 0.22) 50%,
-      rgba(10, 10, 10, 0.40) 78%,
-      rgba(10, 10, 10, 0.70) 100%
+      rgba(8, 8, 8, 0.76) 0%,
+      rgba(8, 8, 8, 0.45) 18%,
+      rgba(8, 8, 8, 0.14) 50%,
+      rgba(8, 8, 8, 0.28) 80%,
+      rgba(8, 8, 8, 0.55) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.10) 0%,
-      rgba(0, 0, 0, 0.22) 100%
+      rgba(0, 0, 0, 0.04) 0%,
+      rgba(0, 0, 0, 0.18) 100%
     );
 }
 
-/* =========================
-   LAYOUT
-========================= */
+.gold-glow {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.18;
+}
+
+.gold-glow-1 {
+  width: 320px;
+  height: 320px;
+  right: 12%;
+  top: 8%;
+  background: rgba(212, 175, 55, 0.35);
+}
+
+.gold-glow-2 {
+  width: 240px;
+  height: 240px;
+  right: 24%;
+  bottom: 10%;
+  background: rgba(212, 175, 55, 0.18);
+}
 
 .layout {
   position: relative;
@@ -87,82 +104,15 @@ button:disabled {
   min-height: 100vh;
 }
 
-/* =========================
-   SIDEBAR
-========================= */
-
 .sidebar {
-  border-right: 1px solid rgba(212, 175, 55, 0.12);
+  border-right: 1px solid rgba(212, 175, 55, 0.1);
   background: linear-gradient(
     180deg,
-    rgba(16, 16, 16, 0.94) 0%,
-    rgba(9, 9, 9, 0.90) 100%
+    rgba(14, 14, 14, 0.92) 0%,
+    rgba(8, 8, 8, 0.88) 100%
   );
   backdrop-filter: blur(8px);
-  padding: 24px;
-}
-
-.brand-card {
-  background: linear-gradient(
-    145deg,
-    rgba(17, 17, 17, 0.93),
-    rgba(5, 5, 5, 0.88)
-  );
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 28px;
-  padding: 22px;
-  margin-bottom: 22px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-}
-
-.brand-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(212, 175, 55, 0.08);
-  color: #d4af37;
-  margin-bottom: 16px;
-}
-
-.logo-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.brand-logo {
-  max-width: 190px;
-  max-height: 120px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.1));
-}
-
-.brand-title {
-  margin: 0;
-  color: #d4af37;
-  letter-spacing: 0.22em;
-  font-size: 28px;
-  font-weight: 800;
-  text-align: center;
-}
-
-.brand-subtitle {
-  margin: 6px 0 0;
-  color: #9d8750;
-  text-align: center;
-  letter-spacing: 0.35em;
-  font-size: 12px;
-}
-
-.brand-text {
-  margin: 16px 0 0;
-  color: #b0b0b0;
-  font-size: 14px;
-  line-height: 1.55;
-  text-align: center;
+  padding: 34px 24px;
 }
 
 .form-panel {
@@ -200,7 +150,7 @@ button:disabled {
 .textarea {
   width: 100%;
   border: 1px solid #2b2b2b;
-  background: rgba(17, 17, 17, 0.84);
+  background: rgba(17, 17, 17, 0.82);
   color: #f4f4f4;
   border-radius: 16px;
   padding: 13px 14px;
@@ -220,10 +170,6 @@ button:disabled {
   background: rgba(21, 21, 21, 0.9);
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
 }
-
-/* =========================
-   BOTONES
-========================= */
 
 .btn {
   border: none;
@@ -260,10 +206,6 @@ button:disabled {
   border: 1px solid #4d2c2c;
 }
 
-/* =========================
-   CONTENIDO
-========================= */
-
 .content {
   padding: 28px;
   color: #f0f0f0;
@@ -274,18 +216,26 @@ button:disabled {
   gap: 14px;
   justify-content: space-between;
   align-items: center;
-  background: rgba(17, 17, 17, 0.56);
+  background: rgba(17, 17, 17, 0.48);
   border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: 30px;
   padding: 16px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+.minimal-topbar {
+  justify-content: flex-start;
 }
 
 .search-box {
   position: relative;
   width: 100%;
   max-width: 560px;
+}
+
+.search-box-wide {
+  max-width: 720px;
 }
 
 .search-icon {
@@ -300,7 +250,7 @@ button:disabled {
   width: 100%;
   border-radius: 999px;
   border: 1px solid #2b2b2b;
-  background: rgba(12, 12, 12, 0.82);
+  background: rgba(12, 12, 12, 0.8);
   color: white;
   padding: 13px 16px 13px 42px;
   outline: none;
@@ -312,16 +262,6 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
 }
 
-.topbar-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* =========================
-   ESTADÍSTICAS
-========================= */
-
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -331,12 +271,12 @@ button:disabled {
 }
 
 .stat-card {
-  background: rgba(17, 17, 17, 0.58);
+  background: rgba(17, 17, 17, 0.5);
   border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: 22px;
   padding: 20px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
 }
 
 .stat-value {
@@ -360,17 +300,13 @@ button:disabled {
   font-size: 12px;
 }
 
-/* =========================
-   TABLA
-========================= */
-
 .table-card {
-  background: rgba(17, 17, 17, 0.58);
+  background: rgba(17, 17, 17, 0.5);
   border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: 30px;
   overflow: hidden;
   backdrop-filter: blur(10px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.20);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
 .table-header {
@@ -390,13 +326,6 @@ button:disabled {
   margin: 6px 0 0;
   color: #7d7d7d;
   font-size: 14px;
-}
-
-.table-badge {
-  color: #d4af37;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.24em;
 }
 
 .table-wrap {
@@ -487,10 +416,6 @@ tbody tr:hover {
   padding: 40px;
 }
 
-/* =========================
-   STATUS
-========================= */
-
 .status-bar {
   margin-top: 16px;
   border: 1px solid rgba(212, 175, 55, 0.06);
@@ -500,16 +425,6 @@ tbody tr:hover {
   color: #b7b7b7;
   backdrop-filter: blur(6px);
 }
-
-.footer-note {
-  margin-top: 14px;
-  color: #6f6f6f;
-  font-size: 13px;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
 
 @media (max-width: 1200px) {
   .layout {
@@ -522,8 +437,9 @@ tbody tr:hover {
   }
 
   .background-overlay {
-    background-size: 88%;
-    opacity: 0.18;
+    background-position: center center;
+    background-size: 94%;
+    opacity: 0.2;
   }
 
   .stats-grid {
@@ -537,25 +453,12 @@ tbody tr:hover {
   }
 
   .sidebar {
-    padding: 16px;
+    padding: 20px 16px;
   }
 
   .background-overlay {
-    background-size: 110%;
+    background-size: 120%;
     opacity: 0.14;
-  }
-
-  .topbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .topbar-actions {
-    width: 100%;
-  }
-
-  .topbar-actions .btn {
-    flex: 1;
   }
 
   .stats-grid {
