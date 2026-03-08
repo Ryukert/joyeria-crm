@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
   color: #ffffff;
   background: #0a0a0a;
 }
@@ -32,42 +32,87 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* =========================
+   FONDO GENERAL CON LOGO
+========================= */
+
 .app-shell {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(212, 175, 55, 0.14), transparent 22%),
-    radial-gradient(circle at bottom left, rgba(212, 175, 55, 0.08), transparent 22%),
-    #0a0a0a;
   position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #0a0a0a;
 }
 
 .background-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url("/logo_eduardos.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 52%;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.background-overlay::after {
+  content: "";
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  background: linear-gradient(120deg, rgba(0,0,0,.15), rgba(0,0,0,.05));
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10, 10, 10, 0.98) 0%,
+      rgba(10, 10, 10, 0.92) 20%,
+      rgba(10, 10, 10, 0.76) 50%,
+      rgba(10, 10, 10, 0.88) 80%,
+      rgba(10, 10, 10, 0.96) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.18) 0%,
+      rgba(0, 0, 0, 0.34) 100%
+    );
 }
+
+/* =========================
+   LAYOUT
+========================= */
 
 .layout {
   position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 340px 1fr;
   min-height: 100vh;
 }
 
+/* =========================
+   SIDEBAR
+========================= */
+
 .sidebar {
-  border-right: 1px solid #232323;
-  background: linear-gradient(180deg, #101010 0%, #090909 100%);
+  border-right: 1px solid rgba(212, 175, 55, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(16, 16, 16, 0.96) 0%,
+    rgba(9, 9, 9, 0.92) 100%
+  );
+  backdrop-filter: blur(10px);
   padding: 24px;
 }
 
 .brand-card {
-  background: linear-gradient(145deg, #111111, #050505);
+  background: linear-gradient(
+    145deg,
+    rgba(17, 17, 17, 0.95),
+    rgba(5, 5, 5, 0.92)
+  );
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 28px;
   padding: 22px;
   margin-bottom: 22px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .brand-icon {
@@ -89,9 +134,10 @@ button:disabled {
 }
 
 .brand-logo {
-  max-width: 180px;
-  max-height: 110px;
+  max-width: 190px;
+  max-height: 120px;
   object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.1));
 }
 
 .brand-title {
@@ -105,7 +151,7 @@ button:disabled {
 
 .brand-subtitle {
   margin: 6px 0 0;
-  color: #8a7840;
+  color: #9d8750;
   text-align: center;
   letter-spacing: 0.35em;
   font-size: 12px;
@@ -113,9 +159,9 @@ button:disabled {
 
 .brand-text {
   margin: 16px 0 0;
-  color: #aaaaaa;
+  color: #b0b0b0;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   text-align: center;
 }
 
@@ -143,7 +189,7 @@ button:disabled {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  color: rgba(212, 175, 55, 0.9);
+  color: rgba(212, 175, 55, 0.92);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -154,12 +200,13 @@ button:disabled {
 .textarea {
   width: 100%;
   border: 1px solid #2b2b2b;
-  background: #111111;
+  background: rgba(17, 17, 17, 0.88);
   color: #f4f4f4;
   border-radius: 16px;
   padding: 13px 14px;
   outline: none;
   transition: 0.2s ease;
+  backdrop-filter: blur(6px);
 }
 
 .textarea {
@@ -170,8 +217,13 @@ button:disabled {
 .input:focus,
 .textarea:focus {
   border-color: #d4af37;
-  background: #151515;
+  background: rgba(21, 21, 21, 0.94);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
 }
+
+/* =========================
+   BOTONES
+========================= */
 
 .btn {
   border: none;
@@ -193,22 +245,28 @@ button:disabled {
 .btn-primary {
   background: linear-gradient(90deg, #d4af37, #b8932a);
   color: #0a0a0a;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.18);
 }
 
 .btn-secondary {
-  background: #141414;
+  background: rgba(20, 20, 20, 0.9);
   color: #dddddd;
   border: 1px solid #333333;
 }
 
 .btn-danger {
-  background: #141414;
-  color: #ff8e8e;
+  background: rgba(20, 20, 20, 0.9);
+  color: #ff9e9e;
   border: 1px solid #4d2c2c;
 }
 
+/* =========================
+   CONTENIDO
+========================= */
+
 .content {
   padding: 28px;
+  color: #f0f0f0;
 }
 
 .topbar {
@@ -216,11 +274,12 @@ button:disabled {
   gap: 14px;
   justify-content: space-between;
   align-items: center;
-  background: rgba(17, 17, 17, 0.85);
-  border: 1px solid #242424;
+  background: rgba(17, 17, 17, 0.72);
+  border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: 30px;
   padding: 16px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
 }
 
 .search-box {
@@ -241,14 +300,16 @@ button:disabled {
   width: 100%;
   border-radius: 999px;
   border: 1px solid #2b2b2b;
-  background: #0c0c0c;
+  background: rgba(12, 12, 12, 0.9);
   color: white;
   padding: 13px 16px 13px 42px;
   outline: none;
+  backdrop-filter: blur(6px);
 }
 
 .search-input:focus {
   border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
 }
 
 .topbar-actions {
@@ -256,6 +317,10 @@ button:disabled {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* =========================
+   ESTADÍSTICAS
+========================= */
 
 .stats-grid {
   display: grid;
@@ -266,10 +331,12 @@ button:disabled {
 }
 
 .stat-card {
-  background: rgba(17, 17, 17, 0.82);
-  border: 1px solid #1f1f1f;
+  background: rgba(17, 17, 17, 0.75);
+  border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: 22px;
   padding: 20px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
 }
 
 .stat-value {
@@ -280,7 +347,7 @@ button:disabled {
 
 .stat-label {
   margin-top: 8px;
-  color: #777777;
+  color: #8a8a8a;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 11px;
@@ -289,15 +356,21 @@ button:disabled {
 
 .stat-subtitle {
   margin-top: 8px;
-  color: #5c5c5c;
+  color: #666666;
   font-size: 12px;
 }
 
+/* =========================
+   TABLA
+========================= */
+
 .table-card {
-  background: rgba(17, 17, 17, 0.82);
-  border: 1px solid #222222;
+  background: rgba(17, 17, 17, 0.74);
+  border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: 30px;
   overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
 }
 
 .table-header {
@@ -315,7 +388,7 @@ button:disabled {
 
 .table-header p {
   margin: 6px 0 0;
-  color: #777777;
+  color: #7d7d7d;
   font-size: 14px;
 }
 
@@ -336,7 +409,7 @@ table {
 }
 
 thead {
-  background: #101010;
+  background: rgba(16, 16, 16, 0.92);
 }
 
 th {
@@ -362,11 +435,11 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(212, 175, 55, 0.04);
+  background: rgba(212, 175, 55, 0.045);
 }
 
 .active-row {
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(212, 175, 55, 0.09);
 }
 
 .category-pill {
@@ -392,7 +465,7 @@ tbody tr:hover {
 
 .mini-btn {
   border: 1px solid #333333;
-  background: #121212;
+  background: rgba(18, 18, 18, 0.92);
   color: #e2e2e2;
   border-radius: 12px;
   padding: 8px 10px;
@@ -414,20 +487,29 @@ tbody tr:hover {
   padding: 40px;
 }
 
+/* =========================
+   STATUS
+========================= */
+
 .status-bar {
   margin-top: 16px;
-  border: 1px solid #222222;
-  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(212, 175, 55, 0.06);
+  background: rgba(0, 0, 0, 0.24);
   border-radius: 18px;
   padding: 14px 16px;
   color: #b7b7b7;
+  backdrop-filter: blur(8px);
 }
 
 .footer-note {
   margin-top: 14px;
-  color: #6a6a6a;
+  color: #6f6f6f;
   font-size: 13px;
 }
+
+/* =========================
+   RESPONSIVE
+========================= */
 
 @media (max-width: 1200px) {
   .layout {
@@ -437,6 +519,11 @@ tbody tr:hover {
   .sidebar {
     border-right: none;
     border-bottom: 1px solid #232323;
+  }
+
+  .background-overlay {
+    background-size: 70%;
+    opacity: 0.1;
   }
 
   .stats-grid {
@@ -451,6 +538,11 @@ tbody tr:hover {
 
   .sidebar {
     padding: 16px;
+  }
+
+  .background-overlay {
+    background-size: 88%;
+    opacity: 0.08;
   }
 
   .topbar {
