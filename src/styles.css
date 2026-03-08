@@ -1,0 +1,172 @@
+/* ---------- FONDO GENERAL ---------- */
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #0a0a0a;
+}
+
+/* contenedor principal */
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* logo de fondo */
+
+.background-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background-image: url("/logo_eduardos.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 60%;
+
+  opacity: 0.15;
+  z-index: 0;
+}
+
+/* degradado encima */
+
+.background-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    rgba(10,10,10,0.95) 0%,
+    rgba(10,10,10,0.85) 40%,
+    rgba(10,10,10,0.7) 60%,
+    rgba(10,10,10,0.9) 100%
+  );
+}
+
+/* ---------- LAYOUT ---------- */
+
+.layout {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------- SIDEBAR ---------- */
+
+.sidebar {
+  width: 320px;
+  padding: 30px;
+  background: rgba(10,10,10,0.92);
+  border-right: 1px solid #222;
+}
+
+.brand-title {
+  color: #d4af37;
+  letter-spacing: 4px;
+  margin: 10px 0 0 0;
+}
+
+.brand-subtitle {
+  color: #a08c45;
+  letter-spacing: 6px;
+  font-size: 12px;
+}
+
+/* ---------- CONTENIDO ---------- */
+
+.content {
+  flex: 1;
+  padding: 40px;
+  color: #ddd;
+}
+
+/* ---------- TARJETAS ---------- */
+
+.stat-card {
+  background: #111;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid #222;
+}
+
+.stat-value {
+  color: #d4af37;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.stat-label {
+  color: #777;
+  font-size: 12px;
+}
+
+/* ---------- TABLA ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #111;
+}
+
+th {
+  color: #d4af37;
+  text-align: left;
+  padding: 12px;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #222;
+}
+
+/* ---------- BOTONES ---------- */
+
+.btn {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg,#d4af37,#b8962f);
+  color: black;
+  font-weight: bold;
+}
+
+.btn-secondary {
+  background: #1a1a1a;
+  color: #ccc;
+}
+
+.btn-danger {
+  background: #a12a2a;
+  color: white;
+}
+
+/* ---------- INPUTS ---------- */
+
+.input,
+.textarea,
+.search-input {
+  width: 100%;
+  padding: 10px;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  color: white;
+  border-radius: 6px;
+}
+
+textarea {
+  min-height: 80px;
+}
