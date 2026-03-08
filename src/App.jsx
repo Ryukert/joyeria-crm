@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
-  Download,
   Trash2,
   Save,
   X,
-  Gem,
   Pencil,
   User,
   Phone,
@@ -15,7 +13,6 @@ import {
   BadgeDollarSign,
   Package,
   Tags,
-  RefreshCw,
 } from "lucide-react";
 
 const CATEGORIAS = [
@@ -47,37 +44,6 @@ function money(value) {
     currency: "MXN",
     maximumFractionDigits: 2,
   }).format(Number.isFinite(n) ? n : 0);
-}
-
-function downloadCSV(rows) {
-  const headers = [
-    "nombre",
-    "telefono",
-    "email",
-    "direccion",
-    "joya",
-    "categoria",
-    "precio",
-    "fecha",
-    "notas",
-  ];
-
-  const escape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-
-  const csv = [
-    headers.join(","),
-    ...rows.map((r) => headers.map((h) => escape(r[h])).join(",")),
-  ].join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "clientes_joyeria.csv";
-  a.click();
-
-  URL.revokeObjectURL(url);
 }
 
 function StatCard({ label, value, subtitle }) {
@@ -393,33 +359,11 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="background-overlay"></div>
+      <div className="gold-glow gold-glow-1"></div>
+      <div className="gold-glow gold-glow-2"></div>
 
       <div className="layout">
         <aside className="sidebar">
-          <div className="brand-card">
-            <div className="brand-icon">
-              <Gem size={34} />
-            </div>
-
-            <div className="logo-wrap">
-              <img
-                src="/logo_eduardos.png"
-                alt="Logo Eduardo's Joyería"
-                className="brand-logo"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            </div>
-
-            <h1 className="brand-title">EDUARDO'S</h1>
-            <p className="brand-subtitle">LUXURY CRM</p>
-            <p className="brand-text">
-              Sistema web para controlar clientes y ventas de joyería conectado
-              a Firebase Realtime Database desde el backend.
-            </p>
-          </div>
-
           <form onSubmit={handleSave} className="form-panel">
             <div className="section-title">Datos del cliente</div>
 
@@ -538,8 +482,8 @@ export default function App() {
         </aside>
 
         <main className="content">
-          <div className="topbar">
-            <div className="search-box">
+          <div className="topbar minimal-topbar">
+            <div className="search-box search-box-wide">
               <Search size={16} className="search-icon" />
               <input
                 type="text"
@@ -548,32 +492,6 @@ export default function App() {
                 placeholder="Buscar por nombre, joya, categoría, correo..."
                 className="search-input"
               />
-            </div>
-
-            <div className="topbar-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => downloadCSV(clientes)}
-              >
-                <Download size={16} />
-                Exportar CSV
-              </button>
-
-              <button
-                className="btn btn-secondary"
-                onClick={cargarClientes}
-                disabled={loading}
-              >
-                <RefreshCw size={16} />
-                {loading ? "Cargando..." : "Recargar"}
-              </button>
-
-              <button
-                className="btn btn-secondary"
-                onClick={() => setSearch("")}
-              >
-                Limpiar filtro
-              </button>
             </div>
           </div>
 
@@ -610,7 +528,6 @@ export default function App() {
                     : `${filtrados.length} resultado(s) mostrados`}
                 </p>
               </div>
-              <div className="table-badge">REALTIME + VERCEL</div>
             </div>
 
             <div className="table-wrap">
@@ -687,11 +604,6 @@ export default function App() {
           </div>
 
           <div className="status-bar">{mensaje}</div>
-
-          <div className="footer-note">
-            Esta versión usa Firebase Admin únicamente en el backend de Vercel.
-            Las credenciales no se exponen al navegador.
-          </div>
         </main>
       </div>
     </div>
