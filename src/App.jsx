@@ -13,6 +13,8 @@ import {
   BadgeDollarSign,
   Package,
   Tags,
+  Wallet,
+  Receipt,
 } from "lucide-react";
 
 const CATEGORIAS = [
@@ -25,6 +27,16 @@ const CATEGORIAS = [
   "Otro",
 ];
 
+const METODOS_PAGO = [
+  "Efectivo",
+  "Transferencia",
+  "Tarjeta",
+  "Depósito",
+  "Otro",
+];
+
+const FILTROS_PAGO = ["Todos", "No pagados", "Abonados", "Pagados"];
+
 const initialForm = () => ({
   nombre: "",
   telefono: "",
@@ -33,8 +45,17 @@ const initialForm = () => ({
   joya: "",
   categoria: "",
   precio: "",
+  anticipo: "",
+  metodoPago: "",
   fecha: new Date().toISOString().slice(0, 10),
   notas: "",
+});
+
+const initialPagoForm = () => ({
+  monto: "",
+  metodo: "",
+  fecha: new Date().toISOString().slice(0, 10),
+  nota: "",
 });
 
 function money(value) {
@@ -44,6 +65,28 @@ function money(value) {
     currency: "MXN",
     maximumFractionDigits: 2,
   }).format(Number.isFinite(n) ? n : 0);
+}
+
+function num(value) {
+  const n = Number(String(value ?? "").replace(/[$,\s]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function calcularPago(precio, totalPagado) {
+  const total = Number(precio || 0);
+  const pagado = Number(totalPagado || 0);
+  const saldo = Math.max(total - pagado, 0);
+
+  let estado = "No pagado";
+  if (pagado > 0 && saldo > 0) estado = "Abonado";
+  if (total > 0 && saldo <= 0) estado = "Pagado";
+
+  return {
+    total,
+    pagado,
+    saldo,
+    estado,
+  };
 }
 
 function StatCard({ label, value, subtitle }) {
@@ -98,11 +141,10 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(url, {
+    return await fetch(url, {
       ...options,
       signal: controller.signal,
     });
-    return response;
   } finally {
     clearTimeout(timeout);
   }
@@ -112,11 +154,17 @@ export default function App() {
   const [clientes, setClientes] = useState([]);
   const [form, setForm] = useState(initialForm());
   const [search, setSearch] = useState("");
+  const [filtroPago, setFiltroPago] = useState("Todos");
   const [editingId, setEditingId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [mensaje, setMensaje] = useState("Listo.");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [pagoModalOpen, setPagoModalOpen] = useState(false);
+  const [clientePago, setClientePago] = useState(null);
+  const [pagoForm, setPagoForm] = useState(initialPagoForm());
+  const [guardandoPago, setGuardandoPago] = useState(false);
 
   async function cargarClientes() {
     try {
@@ -157,56 +205,114 @@ export default function App() {
     cargarClientes();
   }, []);
 
+  const clientesConPago = useMemo(() => {
+    return clientes.map((c) => {
+      const precio = Number(c.precio || 0);
+      const historialPagos = Array.isArray(c.historialPagos) ? c.historialPagos : [];
+      const totalHistorial = historialPagos.reduce(
+        (acc, p) => acc + Number(p.monto || 0),
+        0
+      );
+
+      const anticipo =
+        c.anticipo !== undefined ? Number(c.anticipo || 0) : 0;
+
+      const totalPagado =
+        c.totalPagado !== undefined
+          ? Number(c.totalPagado || 0)
+          : Math.max(anticipo, totalHistorial);
+
+      const pago = calcularPago(precio, totalPagado);
+
+      return {
+        ...c,
+        precio,
+        anticipo,
+        historialPagos,
+        totalPagado,
+        saldoPendiente: pago.saldo,
+        estadoPago: pago.estado,
+      };
+    });
+  }, [clientes]);
+
   const filtrados = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    const rows = [...clientes].sort((a, b) =>
+    let rows = [...clientesConPago].sort((a, b) =>
       String(b.fecha || "").localeCompare(String(a.fecha || ""))
     );
 
-    if (!q) return rows;
+    if (q) {
+      rows = rows.filter((c) =>
+        [
+          c.nombre,
+          c.telefono,
+          c.email,
+          c.direccion,
+          c.joya,
+          c.categoria,
+          c.fecha,
+          c.notas,
+          c.estadoPago,
+          c.metodoPago,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(q)
+      );
+    }
 
-    return rows.filter((c) =>
-      [
-        c.nombre,
-        c.telefono,
-        c.email,
-        c.direccion,
-        c.joya,
-        c.categoria,
-        c.fecha,
-        c.notas,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [clientes, search]);
+    if (filtroPago === "No pagados") {
+      rows = rows.filter((c) => Number(c.totalPagado || 0) <= 0);
+    }
+
+    if (filtroPago === "Abonados") {
+      rows = rows.filter(
+        (c) =>
+          Number(c.totalPagado || 0) > 0 && Number(c.saldoPendiente || 0) > 0
+      );
+    }
+
+    if (filtroPago === "Pagados") {
+      rows = rows.filter((c) => Number(c.saldoPendiente || 0) <= 0);
+    }
+
+    return rows;
+  }, [clientesConPago, search, filtroPago]);
 
   const stats = useMemo(() => {
-    const total = clientes.reduce(
+    const totalVentas = clientesConPago.reduce(
       (acc, c) => acc + Number(c.precio || 0),
       0
     );
-    const promedio = clientes.length ? total / clientes.length : 0;
-    const ultima = clientes.length
-      ? [...clientes]
-          .filter((c) => c.fecha)
-          .sort((a, b) =>
-            String(b.fecha || "").localeCompare(String(a.fecha || ""))
-          )[0]?.fecha || "—"
-      : "—";
+    const totalCobrado = clientesConPago.reduce(
+      (acc, c) => acc + Number(c.totalPagado || 0),
+      0
+    );
+    const totalPendiente = clientesConPago.reduce(
+      (acc, c) => acc + Number(c.saldoPendiente || 0),
+      0
+    );
+    const noPagados = clientesConPago.filter(
+      (c) => Number(c.totalPagado || 0) <= 0
+    ).length;
 
     return {
-      clientes: clientes.length,
-      total,
-      promedio,
-      ultima,
+      clientes: clientesConPago.length,
+      totalVentas,
+      totalCobrado,
+      totalPendiente,
+      noPagados,
     };
-  }, [clientes]);
+  }, [clientesConPago]);
 
   function handleChange(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handlePagoChange(field, value) {
+    setPagoForm((prev) => ({ ...prev, [field]: value }));
   }
 
   function resetForm() {
@@ -222,11 +328,20 @@ export default function App() {
       return;
     }
 
-    const precio = Number(String(form.precio).replace(/[$,\s]/g, ""));
-    if (form.precio && Number.isNaN(precio)) {
+    const precio = num(form.precio);
+    const anticipo = num(form.anticipo);
+
+    if (form.precio && !Number.isFinite(precio)) {
       alert("El precio debe ser un número válido.");
       return;
     }
+
+    if (form.anticipo && !Number.isFinite(anticipo)) {
+      alert("El anticipo debe ser un número válido.");
+      return;
+    }
+
+    const pago = calcularPago(precio, anticipo);
 
     const payload = {
       nombre: form.nombre.trim(),
@@ -235,9 +350,25 @@ export default function App() {
       direccion: form.direccion.trim(),
       joya: form.joya.trim(),
       categoria: form.categoria,
-      precio: Number.isFinite(precio) ? precio : 0,
+      precio,
+      anticipo,
+      totalPagado: anticipo,
+      saldoPendiente: pago.saldo,
+      estadoPago: pago.estado,
+      metodoPago: form.metodoPago,
       fecha: form.fecha,
       notas: form.notas.trim(),
+      historialPagos:
+        anticipo > 0
+          ? [
+              {
+                fecha: form.fecha,
+                monto: anticipo,
+                metodo: form.metodoPago || "Otro",
+                nota: "Pago inicial / anticipo",
+              },
+            ]
+          : [],
     };
 
     try {
@@ -247,10 +378,30 @@ export default function App() {
       let res;
 
       if (editingId) {
+        const existente = clientesConPago.find((c) => c.id === editingId);
+        const historialExistente = Array.isArray(existente?.historialPagos)
+          ? existente.historialPagos
+          : [];
+
+        const totalHistorial = historialExistente.reduce(
+          (acc, p) => acc + Number(p.monto || 0),
+          0
+        );
+
+        const pagoEditado = calcularPago(precio, totalHistorial);
+
         res = await fetchWithTimeout("/api/clientes", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingId, ...payload }),
+          body: JSON.stringify({
+            id: editingId,
+            ...payload,
+            anticipo: existente?.anticipo ?? anticipo,
+            totalPagado: totalHistorial,
+            saldoPendiente: pagoEditado.saldo,
+            estadoPago: pagoEditado.estado,
+            historialPagos: historialExistente,
+          }),
         });
       } else {
         res = await fetchWithTimeout("/api/clientes", {
@@ -300,6 +451,8 @@ export default function App() {
       joya: cliente.joya || "",
       categoria: cliente.categoria || "",
       precio: String(cliente.precio ?? ""),
+      anticipo: String(cliente.anticipo ?? ""),
+      metodoPago: cliente.metodoPago || "",
       fecha: cliente.fecha || new Date().toISOString().slice(0, 10),
       notas: cliente.notas || "",
     });
@@ -309,7 +462,7 @@ export default function App() {
   }
 
   async function handleDelete(id) {
-    const cliente = clientes.find((c) => c.id === id);
+    const cliente = clientesConPago.find((c) => c.id === id);
     if (!cliente) return;
 
     const ok = window.confirm(
@@ -356,6 +509,96 @@ export default function App() {
     handleDelete(selectedId);
   }
 
+  function estadoClass(estado) {
+    if (estado === "Pagado") return "estado-pill estado-pagado";
+    if (estado === "Abonado") return "estado-pill estado-abonado";
+    return "estado-pill estado-no-pagado";
+  }
+
+  function abrirModalPago(cliente) {
+    setClientePago(cliente);
+    setPagoForm(initialPagoForm());
+    setPagoModalOpen(true);
+  }
+
+  function cerrarModalPago() {
+    setPagoModalOpen(false);
+    setClientePago(null);
+    setPagoForm(initialPagoForm());
+  }
+
+  async function registrarPago() {
+    if (!clientePago) return;
+
+    const monto = num(pagoForm.monto);
+    if (monto <= 0) {
+      alert("El monto del pago debe ser mayor que 0.");
+      return;
+    }
+
+    const historialActual = Array.isArray(clientePago.historialPagos)
+      ? clientePago.historialPagos
+      : [];
+
+    const nuevoPago = {
+      fecha: pagoForm.fecha,
+      monto,
+      metodo: pagoForm.metodo || "Otro",
+      nota: pagoForm.nota || "Abono",
+    };
+
+    const nuevoHistorial = [...historialActual, nuevoPago];
+    const nuevoTotalPagado = nuevoHistorial.reduce(
+      (acc, p) => acc + Number(p.monto || 0),
+      0
+    );
+    const pago = calcularPago(clientePago.precio, nuevoTotalPagado);
+
+    try {
+      setGuardandoPago(true);
+      setMensaje(`Registrando pago para ${clientePago.nombre}...`);
+
+      const res = await fetchWithTimeout("/api/clientes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: clientePago.id,
+          nombre: clientePago.nombre || "",
+          telefono: clientePago.telefono || "",
+          email: clientePago.email || "",
+          direccion: clientePago.direccion || "",
+          joya: clientePago.joya || "",
+          categoria: clientePago.categoria || "",
+          precio: Number(clientePago.precio || 0),
+          anticipo: Number(clientePago.anticipo || 0),
+          totalPagado: nuevoTotalPagado,
+          saldoPendiente: pago.saldo,
+          estadoPago: pago.estado,
+          metodoPago: clientePago.metodoPago || pagoForm.metodo || "",
+          fecha: clientePago.fecha || "",
+          notas: clientePago.notas || "",
+          historialPagos: nuevoHistorial,
+          fechaUltimoPago: pagoForm.fecha,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo registrar el pago.");
+      }
+
+      setMensaje(`Pago registrado para ${clientePago.nombre}.`);
+      cerrarModalPago();
+      await cargarClientes();
+    } catch (error) {
+      console.error("Error al registrar pago:", error);
+      alert(error.message || "No se pudo registrar el pago.");
+    } finally {
+      setGuardandoPago(false);
+    }
+  }
+
   return (
     <div className="app-shell">
       <div className="background-overlay"></div>
@@ -399,7 +642,7 @@ export default function App() {
               onChange={(e) => handleChange("direccion", e.target.value)}
             />
 
-            <div className="section-title">Detalle de compra</div>
+            <div className="section-title">Detalle de venta</div>
 
             <Input
               icon={Package}
@@ -425,11 +668,33 @@ export default function App() {
 
             <Input
               icon={BadgeDollarSign}
-              label="Precio"
+              label="Precio total"
               placeholder="Ej. 1200"
               value={form.precio}
               onChange={(e) => handleChange("precio", e.target.value)}
             />
+
+            <Input
+              icon={Wallet}
+              label="Pago inicial / anticipo"
+              placeholder="Ej. 500"
+              value={form.anticipo}
+              onChange={(e) => handleChange("anticipo", e.target.value)}
+            />
+
+            <Select
+              icon={Receipt}
+              label="Método de pago"
+              value={form.metodoPago}
+              onChange={(e) => handleChange("metodoPago", e.target.value)}
+            >
+              <option value="">Selecciona un método</option>
+              {METODOS_PAGO.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </Select>
 
             <Input
               icon={Calendar}
@@ -495,6 +760,21 @@ export default function App() {
             </div>
           </div>
 
+          <div className="filtros-pago">
+            {FILTROS_PAGO.map((f) => (
+              <button
+                key={f}
+                type="button"
+                className={`filtro-btn ${
+                  filtroPago === f ? "filtro-btn-activo" : ""
+                }`}
+                onClick={() => setFiltroPago(f)}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
           <div className="stats-grid">
             <StatCard
               label="Clientes"
@@ -502,19 +782,19 @@ export default function App() {
               subtitle="Registros totales"
             />
             <StatCard
-              label="Ventas totales"
-              value={money(stats.total)}
-              subtitle="Suma acumulada"
+              label="Ventas"
+              value={money(stats.totalVentas)}
+              subtitle="Monto total vendido"
             />
             <StatCard
-              label="Ticket promedio"
-              value={money(stats.promedio)}
-              subtitle="Promedio por cliente"
+              label="Cobrado"
+              value={money(stats.totalCobrado)}
+              subtitle="Total recibido"
             />
             <StatCard
-              label="Última venta"
-              value={stats.ultima}
-              subtitle="Fecha más reciente"
+              label="Pendiente"
+              value={money(stats.totalPendiente)}
+              subtitle={`${stats.noPagados} cliente(s) sin pagar`}
             />
           </div>
 
@@ -525,7 +805,7 @@ export default function App() {
                 <p>
                   {loading
                     ? "Cargando..."
-                    : `${filtrados.length} resultado(s) mostrados`}
+                    : `${filtrados.length} resultado(s) mostrados • Filtro: ${filtroPago}`}
                 </p>
               </div>
             </div>
@@ -535,13 +815,13 @@ export default function App() {
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>Teléfono</th>
-                    <th>Email</th>
-                    <th>Dirección</th>
                     <th>Joya</th>
-                    <th>Categoría</th>
-                    <th>Precio</th>
+                    <th>Total</th>
+                    <th>Pagado</th>
+                    <th>Saldo</th>
+                    <th>Estado</th>
                     <th>Fecha</th>
+                    <th>Pagos</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -559,20 +839,42 @@ export default function App() {
                         className={c.id === selectedId ? "active-row" : ""}
                         onClick={() => setSelectedId(c.id)}
                       >
-                        <td>{c.nombre || "—"}</td>
-                        <td>{c.telefono || "—"}</td>
-                        <td>{c.email || "—"}</td>
-                        <td>{c.direccion || "—"}</td>
-                        <td>{c.joya || "—"}</td>
                         <td>
-                          <span className="category-pill">
-                            {c.categoria || "—"}
-                          </span>
+                          <div>{c.nombre || "—"}</div>
+                          <div className="subdato">{c.telefono || "—"}</div>
+                        </td>
+                        <td>
+                          <div>{c.joya || "—"}</div>
+                          <div className="subdato">{c.categoria || "—"}</div>
                         </td>
                         <td className="price-cell">{money(c.precio)}</td>
+                        <td>{money(c.totalPagado)}</td>
+                        <td>{money(c.saldoPendiente)}</td>
+                        <td>
+                          <span className={estadoClass(c.estadoPago)}>
+                            {c.estadoPago}
+                          </span>
+                        </td>
                         <td>{c.fecha || "—"}</td>
                         <td>
+                          <div className="subdato">
+                            {Array.isArray(c.historialPagos)
+                              ? `${c.historialPagos.length} movimiento(s)`
+                              : "0 movimiento(s)"}
+                          </div>
+                        </td>
+                        <td>
                           <div className="row-actions">
+                            <button
+                              className="mini-btn pay-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                abrirModalPago(c);
+                              }}
+                            >
+                              <Wallet size={14} />
+                              Registrar pago
+                            </button>
                             <button
                               className="mini-btn"
                               onClick={(e) => {
@@ -594,6 +896,25 @@ export default function App() {
                               Eliminar
                             </button>
                           </div>
+
+                          {Array.isArray(c.historialPagos) &&
+                          c.historialPagos.length > 0 ? (
+                            <details className="historial-detalle">
+                              <summary>Ver historial</summary>
+                              <div className="historial-lista">
+                                {c.historialPagos.map((p, idx) => (
+                                  <div key={idx} className="historial-item">
+                                    <div>
+                                      {p.fecha || "—"} • {money(p.monto)}
+                                    </div>
+                                    <div className="subdato">
+                                      {p.metodo || "—"} • {p.nota || "Sin nota"}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          ) : null}
                         </td>
                       </tr>
                     ))
@@ -606,6 +927,85 @@ export default function App() {
           <div className="status-bar">{mensaje}</div>
         </main>
       </div>
+
+      {pagoModalOpen && clientePago ? (
+        <div className="modal-backdrop" onClick={cerrarModalPago}>
+          <div
+            className="modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Registrar pago</h3>
+              <button className="modal-close" onClick={cerrarModalPago}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="modal-cliente">
+                <strong>{clientePago.nombre}</strong>
+                <div className="subdato">{clientePago.joya || "—"}</div>
+                <div className="subdato">
+                  Total: {money(clientePago.precio)} • Pagado:{" "}
+                  {money(clientePago.totalPagado)} • Saldo:{" "}
+                  {money(clientePago.saldoPendiente)}
+                </div>
+              </div>
+
+              <Input
+                icon={BadgeDollarSign}
+                label="Monto del pago"
+                placeholder="Ej. 500"
+                value={pagoForm.monto}
+                onChange={(e) => handlePagoChange("monto", e.target.value)}
+              />
+
+              <Select
+                icon={Receipt}
+                label="Método"
+                value={pagoForm.metodo}
+                onChange={(e) => handlePagoChange("metodo", e.target.value)}
+              >
+                <option value="">Selecciona un método</option>
+                {METODOS_PAGO.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </Select>
+
+              <Input
+                icon={Calendar}
+                label="Fecha del pago"
+                type="date"
+                value={pagoForm.fecha}
+                onChange={(e) => handlePagoChange("fecha", e.target.value)}
+              />
+
+              <TextArea
+                label="Nota"
+                placeholder="Ej. Abono semanal"
+                value={pagoForm.nota}
+                onChange={(e) => handlePagoChange("nota", e.target.value)}
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={cerrarModalPago}>
+                Cancelar
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={registrarPago}
+                disabled={guardandoPago}
+              >
+                <Wallet size={16} />
+                {guardandoPago ? "Guardando..." : "Guardar pago"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
