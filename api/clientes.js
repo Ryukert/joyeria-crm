@@ -1,9 +1,11 @@
 import admin from "firebase-admin";
 import crypto from "crypto";
 
-function getDb() {
+function initFirebase() {
   if (!admin.apps.length) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+      : undefined;
 
     if (!process.env.FIREBASE_PROJECT_ID) {
       throw new Error("Falta FIREBASE_PROJECT_ID");
@@ -25,9 +27,9 @@ function getDb() {
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey
+        privateKey,
       }),
-      databaseURL: process.env.FIREBASE_DATABASE_URL
+      databaseURL: process.env.FIREBASE_DATABASE_URL,
     });
   }
 
@@ -35,7 +37,8 @@ function getDb() {
 }
 
 function sendJson(res, status, data) {
-  res.status(status).setHeader("Content-Type", "application/json");
+  res.status(status);
+  res.setHeader("Content-Type", "application/json");
   res.end(JSON.stringify(data));
 }
 
@@ -49,37 +52,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    const db = getDb();
+    const db = initFirebase();
     const ref = db.ref("clientes_joyeria");
 
     if (req.method === "GET") {
       const snapshot = await ref.get();
       const raw = snapshot.val() || {};
 
-      const data = Object.entries(raw).map(([id, value]) => ({
+      const clientes = Object.keys(raw).map((id) => ({
         id,
-        ...value
+        ...raw[id],
       }));
 
-      data.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
+      clientes.sort((a, b) =>
+        String(b.fecha || "").localeCompare(String(a.fecha || ""))
+      );
 
-      return sendJson(res, 200, data);
+      return sendJson(res, 200, clientes);
     }
 
     if (req.method === "POST") {
-      const {
-        nombre = "",
-        telefono = "",
-        email = "",
-        direccion = "",
-        joya = "",
-        categoria = "",
-        precio = 0,
-        fecha = "",
-        notas = ""
-      } = req.body || {};
+      const body = req.body || {};
 
-      if (!nombre.trim()) {
+      if (!body.nombre || !String(body.nombre).trim()) {
         return sendJson(res, 400, { error: "El nombre es obligatorio." });
       }
 
@@ -87,68 +82,60 @@ export default async function handler(req, res) {
       const now = new Date().toISOString();
 
       await ref.child(id).set({
-        nombre: nombre.trim(),
-        telefono: telefono.trim(),
-        email: email.trim(),
-        direccion: direccion.trim(),
-        joya: joya.trim(),
-        categoria: categoria.trim(),
-        precio: Number(precio || 0),
-        fecha: fecha || "",
-        notas: notas.trim(),
+        nombre: String(body.nombre || "").trim(),
+        telefono: String(body.telefono || "").trim(),
+        email: String(body.email || "").trim(),
+        direccion: String(body.direccion || "").trim(),
+        joya: String(body.joya || "").trim(),
+        categoria: String(body.categoria || "").trim(),
+        precio: Number(body.precio || 0),
+        fecha: String(body.fecha || ""),
+        notas: String(body.notas || "").trim(),
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
 
       return sendJson(res, 201, { ok: true, id });
     }
 
     if (req.method === "PUT") {
-      const {
-        id,
-        nombre = "",
-        telefono = "",
-        email = "",
-        direccion = "",
-        joya = "",
-        categoria = "",
-        precio = 0,
-        fecha = "",
-        notas = ""
-      } = req.body || {};
+      const body = req.body || {};
+      const id = body.id;
 
       if (!id) {
         return sendJson(res, 400, { error: "Falta el id." });
       }
 
-      if (!nombre.trim()) {
+      if (!body.nombre || !String(body.nombre).trim()) {
         return sendJson(res, 400, { error: "El nombre es obligatorio." });
       }
 
       await ref.child(id).update({
-        nombre: nombre.trim(),
-        telefono: telefono.trim(),
-        email: email.trim(),
-        direccion: direccion.trim(),
-        joya: joya.trim(),
-        categoria: categoria.trim(),
-        precio: Number(precio || 0),
-        fecha: fecha || "",
-        notas: notas.trim(),
-        updatedAt: new Date().toISOString()
+        nombre: String(body.nombre || "").trim(),
+        telefono: String(body.telefono || "").trim(),
+        email: String(body.email || "").trim(),
+        direccion: String(body.direccion || "").trim(),
+        joya: String(body.joya || "").trim(),
+        categoria: String(body.categoria || "").trim(),
+        precio: Number(body.precio || 0),
+        fecha: String(body.fecha || ""),
+        notas: String(body.notas || "").trim(),
+        updatedAt: new Date().toISOString(),
       });
 
       return sendJson(res, 200, { ok: true });
     }
 
     if (req.method === "DELETE") {
-      const { id } = req.body || {};
+      const body = req.body || {};
+      const id = body.id;
 
       if (!id) {
         return sendJson(res, 400, { error: "Falta el id." });
       }
 
       await ref.child(id).remove();
+
       return sendJson(res, 200, { ok: true });
     }
 
@@ -156,7 +143,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("API ERROR:", error);
     return sendJson(res, 500, {
-      error: error?.message || "Error interno del servidor."
+      error: error?.message || "Error interno del servidor.",
     });
   }
 }
